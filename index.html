@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Clone</title>
+    <style>
+        body {
+            font-family: 'Clear Sans', 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #121213;
+            color: white;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #3a3a3c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            text-transform: uppercase;
+            font-weight: bold;
+            background-color: #121213;
+            color: white;
+        }
+        .correct { background-color: #6aaa64; border-color: #6aaa64; }
+        .present { background-color: #c9b458; border-color: #c9b458; }
+        .absent { background-color: #787c7e; border-color: #787c7e; }
+        #keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+        .key {
+            width: 40px;
+            height: 50px;
+            margin: 4px;
+            border-radius: 5px;
+            border: none;
+            background-color: #818384;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .key.correct { background-color: #6aaa64; }
+        .key.present { background-color: #c9b458; }
+        .key.absent { background-color: #787c7e; }
+        #message {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #reset {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #6aaa64;
+            border: none;
+            color: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wordle Clone</h1>
+    <div id="grid" class="grid"></div>
+    <div id="keyboard"></div>
+    <p id="message"></p>
+    <button id="reset" onclick="resetGame()">Restart</button>
+
+    <script defer>
+        let words = [
+            "apple", "blame", "grape", "brick", "chill", "coast", "crisp", "frost",
+            "glove", "house", "juice", "moose", "north", "pasta", "pizza", "quick",
+            "rally", "sauce", "shore", "slice", "solid", "toast", "urban", "vibes",
+            "wharf", "winds", "yeast", "zesty", "beach", "candy", "dough", "earth",
+            "flame", "grill", "happy", "igloo", "jolly", "knees", "latch", "merry",
+            "noble", "ocean", "peach", "queen", "robot", "sunny", "table", "umbra",
+            "vivid", "whale", "xenon", "yacht", "zebra", "amber", "badge", "chalk",
+            "dizzy", "elbow", "flock", "giddy", "hover", "inbox", "jumps", "koala",
+            "limit", "magma", "neigh", "orbit", "pluck", "quirk", "risky", "spine",
+            "truce", "ultra", "vixen", "woven", "xylem", "yodel", "zoned", "afire",
+            "blink", "cargo", "dunce", "epoch", "fable", "gusto", "hatch", "icily",
+            "jumbo", "krill", "lemon", "melon", "nudge", "opine", "plume", "quilt",
+            "ranch", "swoop", "tiger", "unzip", "vocal", "wrist", "xenon", "youth",
+            "zonal", "argue", "baker", "chess", "dwell", "eager", "fence", "giant",
+            "honor", "index", "joker", "knife", "lunar", "magic", "nifty", "oasis",
+            "prism", "quest", "raven", "steep", "token", "urban", "valet", "weird",
+            "xerox", "yummy", "zesty"
+        ];
+
+        let targetWord;
+        let attempts = [];
+        let currentGuess = "";
+
+        function startGame() {
+            targetWord = words[Math.floor(Math.random() * words.length)];
+            document.getElementById("grid").innerHTML = "";
+            document.getElementById("message").innerText = "";
+            createGrid();
+            createKeyboard();
+        }
+
+        function createGrid() {
+            const grid = document.getElementById("grid");
+            grid.innerHTML = "";
+            for (let i = 0; i < 30; i++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                grid.appendChild(cell);
+            }
+        }
+
+        function createKeyboard() {
+            const keyboard = document.getElementById("keyboard");
+            keyboard.innerHTML = "";
+            const rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
+            rows.forEach(row => {
+                row.split("").forEach(letter => {
+                    const key = document.createElement("button");
+                    key.innerText = letter;
+                    key.classList.add("key");
+                    key.addEventListener("click", () => handleKeyPress(letter));
+                    keyboard.appendChild(key);
+                });
+            });
+        }
+
+        function handleKeyPress(letter) {
+            if (currentGuess.length < 5) {
+                currentGuess += letter;
+                updateGrid();
+            }
+        }
+
+        function updateGrid() {
+            const grid = document.getElementById("grid");
+            const rowStart = attempts.length * 5;
+            for (let i = 0; i < 5; i++) {
+                grid.children[rowStart + i].innerText = currentGuess[i] || "";
+            }
+        }
+
+        function submitGuess() {
+            let guess = currentGuess.toLowerCase();
+            if (guess.length !== 5 || !words.includes(guess)) {
+                document.getElementById("message").innerText = "Invalid word!";
+                return;
+            }
+            attempts.push(guess);
+
+            if (guess === targetWord) {
+                document.getElementById("message").innerText = "You Win!";
+            } else if (attempts.length >= 6) {
+                document.getElementById("message").innerText = `Game Over! The word was: ${targetWord}`;
+            }
+
+            currentGuess = "";
+        }
+
+        function resetGame() {
+            attempts = [];
+            currentGuess = "";
+            startGame();
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Enter") submitGuess();
+            else if (event.key === "Backspace") {
+                currentGuess = currentGuess.slice(0, -1);
+                updateGrid();
+            } else if (/^[a-zA-Z]$/.test(event.key)) {
+                handleKeyPress(event.key.toLowerCase());
+            }
+        });
+
+        startGame();
+    </script>
+</body>
+</html>
